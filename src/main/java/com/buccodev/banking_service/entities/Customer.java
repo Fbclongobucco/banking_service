@@ -1,9 +1,6 @@
 package com.buccodev.banking_service.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import java.util.Objects;
 
@@ -18,14 +15,17 @@ public class Customer {
     private String cpf;
     private String password;
     private String phone;
+    @OneToOne(mappedBy = "customer", optional = false)
+    private Account account;
 
-    public Customer(Long id, String name, String email, String cpf, String password, String phone) {
+    public Customer(Long id, String name, String email, String cpf, String password, String phone, Account account) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.cpf = cpf;
         this.password = password;
         this.phone = phone;
+        this.account = account;
     }
 
     public Long getId() {
@@ -74,6 +74,14 @@ public class Customer {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
     }
 
     @Override

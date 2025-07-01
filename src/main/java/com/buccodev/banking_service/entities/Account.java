@@ -10,7 +10,6 @@ public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @OneToOne
     private Customer customer;
     private String accountNumber;
