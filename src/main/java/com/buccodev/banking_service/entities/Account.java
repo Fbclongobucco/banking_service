@@ -1,9 +1,9 @@
 package com.buccodev.banking_service.entities;
 
-import com.buccodev.banking_service.entities.cards.Card;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 @Entity
 public class Account {
@@ -12,13 +12,19 @@ public class Account {
     private Long id;
     @OneToOne
     private Customer customer;
+    @Column(unique = true, nullable = false, length = 8)
     private String accountNumber;
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal balance;
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "card_id", referencedColumnName = "id", unique = true)
+    @JoinColumn(name = "card_id", unique = true)
     private Card card;
+    @Column(precision = 10, scale = 2)
+    private BigDecimal creditLimit;
 
 
+    public Account() {
+    }
 
     public Account(Long id, Customer customer, String accountNumber, BigDecimal balance, Card card) {
         this.id = id;
@@ -26,6 +32,7 @@ public class Account {
         this.accountNumber = accountNumber;
         this.balance = balance;
         this.card = card;
+        this.creditLimit = BigDecimal.ZERO;
     }
 
     public Long getId() {
@@ -66,5 +73,25 @@ public class Account {
 
     public void setCard(Card card) {
         this.card = card;
+    }
+
+    public BigDecimal getCreditLimit() {
+        return creditLimit;
+    }
+
+    public void setCreditLimit(BigDecimal creditLimit) {
+        this.creditLimit = creditLimit;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Account account = (Account) o;
+        return Objects.equals(id, account.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
     }
 }

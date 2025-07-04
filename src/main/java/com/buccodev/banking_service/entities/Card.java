@@ -1,25 +1,31 @@
-package com.buccodev.banking_service.entities.cards;
+package com.buccodev.banking_service.entities;
 
-import com.buccodev.banking_service.entities.Account;
 import jakarta.persistence.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
-@DiscriminatorColumn(name = "card_type")
-public abstract class Card {
+public class Card {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @OneToOne(mappedBy = "card", optional = false)
+    @JoinColumn(name = "account_id")
     private Account account;
+    @Column(length = 16, nullable = false)
     private String cardNumber;
+    @Column(length = 3, nullable = false)
     private String cvv;
+    @Temporal(TemporalType.DATE)
+    @Column(nullable = false)
     private LocalDate expirationDate;
+    @Column(nullable = false)
+    private CardType cardType;
+
+    public Card(){
+    }
 
     public Card(Long id, Account account, String cardNumber, String cvv, LocalDate expirationDate) {
         this.id = id;
@@ -27,11 +33,9 @@ public abstract class Card {
         this.cardNumber = cardNumber;
         this.cvv = cvv;
         this.expirationDate = expirationDate;
+        this.cardType = CardType.DEBIT_CARD;
     }
 
-    public abstract boolean debitPayment(BigDecimal value);
-
-    public abstract boolean depositAmount(BigDecimal value);
 
     public Long getId() {
         return id;
@@ -71,6 +75,14 @@ public abstract class Card {
 
     public void setExpirationDate(LocalDate expirationDate) {
         this.expirationDate = expirationDate;
+    }
+
+    public CardType getCardType() {
+        return cardType;
+    }
+
+    public void setCardType(CardType cardType) {
+        this.cardType = cardType;
     }
 
     @Override

@@ -10,13 +10,21 @@ public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false, length = 150)
     private String name;
+    @Column(unique = true, nullable = false, length = 150)
     private String email;
+    @Column(unique = true, nullable = false, length = 11)
     private String cpf;
+    @Column(nullable = false, length = 250)
     private String password;
+    @Column(nullable = false, length = 11)
     private String phone;
     @OneToOne(mappedBy = "customer", optional = false)
     private Account account;
+
+    public Customer() {
+    }
 
     public Customer(Long id, String name, String email, String cpf, String password, String phone, Account account) {
         this.id = id;
