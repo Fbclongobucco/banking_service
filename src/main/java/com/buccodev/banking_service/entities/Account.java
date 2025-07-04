@@ -21,6 +21,7 @@ public class Account {
     private Card card;
     @Column(precision = 10, scale = 2)
     private BigDecimal creditLimit;
+    private String pixKey;
 
 
     public Account() {
@@ -81,6 +82,14 @@ public class Account {
 
     public void setCreditLimit(BigDecimal creditLimit) {
         this.creditLimit = creditLimit;
+    }
+
+    public String getPixKey() {
+        return pixKey;
+    }
+
+    public void setPixKey(String pixKey) {
+        this.pixKey = pixKey;
     }
 
     @Override
