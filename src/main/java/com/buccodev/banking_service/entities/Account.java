@@ -7,12 +7,13 @@ import java.util.Objects;
 
 @Entity
 public class Account {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @OneToOne
     private Customer customer;
-    @Column(unique = true, nullable = false, length = 8)
+    @Column(unique = true, nullable = false, length = 16)
     private String accountNumber;
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal balance;
@@ -27,11 +28,11 @@ public class Account {
     public Account() {
     }
 
-    public Account(Long id, Customer customer, String accountNumber, BigDecimal balance, Card card) {
+    public Account(Long id, Customer customer, String accountNumber, Card card) {
         this.id = id;
         this.customer = customer;
         this.accountNumber = accountNumber;
-        this.balance = balance;
+        this.balance = BigDecimal.ZERO;
         this.card = card;
         this.creditLimit = BigDecimal.ZERO;
     }
