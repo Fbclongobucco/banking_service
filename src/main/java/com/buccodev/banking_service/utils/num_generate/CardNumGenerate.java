@@ -20,7 +20,7 @@ public class CardNumGenerate {
         return number.toString();
     }
 
-    private static int getLuhnCheckDigit(String number) {
+    public static int getLuhnCheckDigit(String number) {
         int sum = 0;
         boolean alternate = true;
 

@@ -3,6 +3,8 @@ package com.buccodev.banking_service.services;
 import com.buccodev.banking_service.entities.Account;
 import com.buccodev.banking_service.entities.Card;
 import com.buccodev.banking_service.entities.Customer;
+import com.buccodev.banking_service.exception.AccountAlreadyException;
+import com.buccodev.banking_service.exception.CardAlreadyException;
 import com.buccodev.banking_service.exception.CustomerAlreadyRegisteredException;
 import com.buccodev.banking_service.exception.ResourceNotFoundException;
 import com.buccodev.banking_service.repositories.AccountRepository;
@@ -19,6 +21,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 @Service
@@ -42,17 +45,21 @@ public class CustomerService {
         }
 
         var numCard = CardNumGenerate.generateNumCard();
-        var expirationCard = LocalDate.now().plusYears(5);
+
+        LocalDate date = LocalDate.now().plusYears(5);
+        LocalDate expirationCard = YearMonth.from(date).atEndOfMonth();
+
+
         var cvv = CardNumGenerate.generateCvv();
 
         var numAccount = AccountNumGenerator.generateBBAccountNumber();
 
         if(cardRepository.existsByCardNumber(numCard)) {
-            numCard = CardNumGenerate.generateNumCard();
+          throw new CardAlreadyException("Card already exists");
         }
 
         if(accountRepository.existsByAccountNumber(numAccount)) {
-            numAccount = AccountNumGenerator.generateBBAccountNumber();
+           throw new AccountAlreadyException("Account already exists");
         }
 
         var card = new Card(null, null, numCard, cvv, expirationCard);
@@ -105,9 +112,7 @@ public class CustomerService {
             size = 10;
         }
         
-       var pagenator = PageRequest.of(page, size);
-
-        var customers = customerRepository.findAll(pagenator);
+        var customers = customerRepository.findAll(PageRequest.of(page, size));
         return customers.stream().map(CustomerMapper::toCustomerResponseDto).toList();
     }
 

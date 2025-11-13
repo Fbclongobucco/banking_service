@@ -28,10 +28,8 @@ public class AccountNumGenerator {
 
         int remainder = sum % 11;
 
-        if (remainder == 0 || remainder == 1) {
+        if (remainder == 0 || remainder == 1 || remainder == 10) {
             return '0';
-        } else if (remainder == 10) {
-            return 'X';
         } else {
             int dv = 11 - remainder;
             return Character.forDigit(dv, 10);

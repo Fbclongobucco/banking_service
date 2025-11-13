@@ -11,7 +11,8 @@ public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "customer_id", unique = true)
     private Customer customer;
     @Column(unique = true, nullable = false, length = 16)
     private String accountNumber;

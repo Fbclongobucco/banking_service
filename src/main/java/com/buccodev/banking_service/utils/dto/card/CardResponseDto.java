@@ -4,5 +4,6 @@ import com.buccodev.banking_service.utils.dto.account.AccountResponseDto;
 
 import java.time.LocalDate;
 
-public record CardResponseDto(Long id, AccountResponseDto account, String cardNumber, String cvv, LocalDate expirationDate) {
+public record CardResponseDto(Long id, String customerName, String accountNumber, String cardNumber,
+                              String cvv, LocalDate expirationDate) {
 }
