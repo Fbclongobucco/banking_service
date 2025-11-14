@@ -1,4 +1,4 @@
-package com.buccodev.banking_service.utils.dto.customer;
+package com.buccodev.banking_service.dtos.customer;
 
 import java.time.LocalDate;
 

@@ -1,16 +1,20 @@
 package com.buccodev.banking_service.services;
 
+import com.buccodev.banking_service.dtos.sharedDtos.PageResponseDto;
 import com.buccodev.banking_service.entities.Account;
+import com.buccodev.banking_service.entities.CardType;
 import com.buccodev.banking_service.entities.PixType;
-import com.buccodev.banking_service.exception.AccountNotFoundException;
+import com.buccodev.banking_service.exceptions.account.AccountNotFoundException;
+import com.buccodev.banking_service.exceptions.account.BalanceNotEnoughException;
+import com.buccodev.banking_service.exceptions.card.CardLimitsException;
 import com.buccodev.banking_service.repositories.AccountRepository;
-import com.buccodev.banking_service.utils.dto.account.AccountResponseDto;
-import com.buccodev.banking_service.utils.dto.account.PixPaymentRequestDto;
+import com.buccodev.banking_service.dtos.account.AccountResponseDto;
+import com.buccodev.banking_service.dtos.account.PixPaymentRequestDto;
+import com.buccodev.banking_service.dtos.account.UpdatePixDto;
 import com.buccodev.banking_service.utils.mapper.AccountMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -43,6 +47,9 @@ public class AccountService {
         var account = accountRepository.findById(id).orElseThrow(()-> new AccountNotFoundException("Account not found"));
         var accountDestination = accountRepository.findByPixKey(pixKeyDestination)
                 .orElseThrow(()-> new AccountNotFoundException("Account not found"));
+        if (account.getBalance().compareTo(amount) < 0) {
+            throw new BalanceNotEnoughException("Balance not enough");
+        }
         account.setBalance(account.getBalance().subtract(amount));
         accountDestination.setBalance(accountDestination.getBalance().add(amount));
         accountRepository.save(account);
@@ -54,15 +61,24 @@ public class AccountService {
         accountRepository.deleteById(account.getId());
     }
 
-    public List<AccountResponseDto> getAllAccounts(Integer page, Integer size){
+    public PageResponseDto<AccountResponseDto> getAllAccounts(Integer page, Integer size){
 
-        if (page == null || page < 0 || size == null || size < 0) {
-            page = 0;
-            size = 10;
-        }
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Account> accounts = accountRepository.findAll(pageable);
-        return accounts.stream().map(AccountMapper::toAccountResponseDto).toList();
+        if (page < 0) page = 0;
+        if (size <= 0 || size > 100) size = 10;
+
+       Page<Account> accounts = accountRepository.findAll(PageRequest.of(page, size));
+       List<AccountResponseDto> content = accounts.getContent().stream()
+               .map(AccountMapper::toAccountResponseDto)
+               .toList();
+       return new PageResponseDto<>(
+               content,
+               accounts.getNumber(),
+               accounts.getSize(),
+               accounts.getTotalElements(),
+               accounts.getTotalPages(),
+               accounts.isFirst(),
+               accounts.isLast()
+       );
     }
 
     public void addBalance(Long id, BigDecimal amount) {
@@ -73,29 +89,31 @@ public class AccountService {
 
     public void removeBalance(Long id, BigDecimal amount) {
         var account = accountRepository.findById(id).orElseThrow(()-> new AccountNotFoundException("Account not found"));
+        if (account.getBalance().compareTo(amount) < 0) {
+            throw new BalanceNotEnoughException("Balance not enough");
+        }
         account.setBalance(account.getBalance().subtract(amount));
         accountRepository.save(account);
     }
 
     public void updateCreditLimit(Long id, BigDecimal creditLimit) {
         var account = accountRepository.findById(id).orElseThrow(()-> new AccountNotFoundException("Account not found"));
+        if(account.getCard().getCardType() != CardType.CREDIT_CARD){
+            throw new CardLimitsException("Card is not a credit card");
+        }
         account.setCreditLimit(creditLimit);
         accountRepository.save(account);
     }
 
-    public void updatePixKey(Long id, PixType pixType) {
+    public void updatePixKey(Long id, UpdatePixDto updatePixDto) {
         var account = accountRepository.findById(id).orElseThrow(()-> new AccountNotFoundException("Account not found"));
-        if (account.getPixKey() != null) {
-            throw new AccountNotFoundException("Account not found");
-        }
 
-
-
-       var newPix  = switch (pixType){
+       var newPix  = switch (updatePixDto.pixType()){
            case  PixType.CPF -> account.getCustomer().getCpf();
            case PixType.EMAIL -> account.getCustomer().getEmail();
            case PixType.PHONE -> account.getCustomer().getPhone()
                    .equals("00000000000") ? null : account.getCustomer().getPhone();
+
        };
        account.setPixKey(newPix);
 

@@ -1,4 +1,4 @@
-package com.buccodev.banking_service.utils.dto.card;
+package com.buccodev.banking_service.dtos.card;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

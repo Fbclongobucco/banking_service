@@ -1,16 +1,16 @@
 package com.buccodev.banking_service.controllers;
 
 import com.buccodev.banking_service.services.CardService;
-import com.buccodev.banking_service.utils.dto.card.CardResponseDto;
-import com.buccodev.banking_service.utils.dto.card.CreditCardRequestDto;
-import com.buccodev.banking_service.utils.dto.card.CreditCardResponseDto;
-import com.buccodev.banking_service.utils.dto.card.DebitCardRequestDto;
-import jakarta.websocket.server.PathParam;
+import com.buccodev.banking_service.dtos.account.CardTypeDto;
+import com.buccodev.banking_service.dtos.card.CardResponseDto;
+import com.buccodev.banking_service.dtos.card.CreditCardRequestDto;
+import com.buccodev.banking_service.dtos.card.CreditCardResponseDto;
+import com.buccodev.banking_service.dtos.card.DebitCardRequestDto;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/card")
@@ -38,6 +38,12 @@ public class CardController {
     @GetMapping("/{id}")
     public ResponseEntity<CardResponseDto> getCardById(@PathVariable Long id){
         return ResponseEntity.ok(cardService.getCardById(id));
+    }
+
+    @PostMapping("/update/type/{id}")
+    public ResponseEntity<Void> updateCardType(@PathVariable Long id, @Valid @RequestBody CardTypeDto cardTypeDto){
+        cardService.updateCardType(id, cardTypeDto);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/cancel/{id}")

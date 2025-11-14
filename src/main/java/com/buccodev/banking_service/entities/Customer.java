@@ -20,7 +20,7 @@ public class Customer {
     private String password;
     @Column(nullable = false, length = 11)
     private String phone;
-    @OneToOne(mappedBy = "customer", optional = false)
+    @OneToOne(mappedBy = "customer", optional = false, cascade = CascadeType.ALL)
     private Account account;
 
     public Customer() {

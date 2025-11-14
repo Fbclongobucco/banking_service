@@ -1,22 +1,24 @@
 package com.buccodev.banking_service.services;
 
+import com.buccodev.banking_service.dtos.sharedDtos.PageResponseDto;
 import com.buccodev.banking_service.entities.Account;
 import com.buccodev.banking_service.entities.Card;
 import com.buccodev.banking_service.entities.Customer;
-import com.buccodev.banking_service.exception.AccountAlreadyException;
-import com.buccodev.banking_service.exception.CardAlreadyException;
-import com.buccodev.banking_service.exception.CustomerAlreadyRegisteredException;
-import com.buccodev.banking_service.exception.ResourceNotFoundException;
+import com.buccodev.banking_service.exceptions.account.AccountAlreadyException;
+import com.buccodev.banking_service.exceptions.card.CardAlreadyException;
+import com.buccodev.banking_service.exceptions.customer.CustomerAlreadyRegisteredException;
+import com.buccodev.banking_service.exceptions.customer.ResourceNotFoundException;
 import com.buccodev.banking_service.repositories.AccountRepository;
 import com.buccodev.banking_service.repositories.CardRepository;
 import com.buccodev.banking_service.repositories.CustomerRepository;
-import com.buccodev.banking_service.utils.dto.customer.CustomerRequestDto;
-import com.buccodev.banking_service.utils.dto.customer.CustomerResponseDto;
-import com.buccodev.banking_service.utils.dto.customer.CustomerUpdateDto;
+import com.buccodev.banking_service.dtos.customer.CustomerRequestDto;
+import com.buccodev.banking_service.dtos.customer.CustomerResponseDto;
+import com.buccodev.banking_service.dtos.customer.CustomerUpdateDto;
 import com.buccodev.banking_service.utils.mapper.CustomerMapper;
 import com.buccodev.banking_service.utils.num_generate.AccountNumGenerator;
 import com.buccodev.banking_service.utils.num_generate.CardNumGenerate;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -62,7 +64,9 @@ public class CustomerService {
            throw new AccountAlreadyException("Account already exists");
         }
 
-        var card = new Card(null, null, numCard, cvv, expirationCard);
+        var password = CardNumGenerate.generatePassword();
+
+        var card = new Card(null, null, numCard, cvv, expirationCard, password);
 
         var account  = new Account(null, null, numAccount, card);
 
@@ -95,7 +99,7 @@ public class CustomerService {
 
     public void deleteCustomer(Long id) {
         var customer = customerRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Resource not found"));
-        customerRepository.delete(customer);
+        customerRepository.deleteById(customer.getId());
     }
 
     public CustomerResponseDto getCustomerByEmail(String email) {
@@ -103,17 +107,25 @@ public class CustomerService {
         return CustomerMapper.toCustomerResponseDto(customer);
     }
 
-    public List<CustomerResponseDto> getAllCustomers(Integer page, Integer size) {
+    public PageResponseDto<CustomerResponseDto> getAllCustomers(Integer page, Integer size) {
+        if (page < 0) page = 0;
+        if (size <= 0 || size > 100) size = 10;
 
-        if (page < 0) {
-            page = 0;
-        }
-        if (size <= 0) {
-            size = 10;
-        }
-        
-        var customers = customerRepository.findAll(PageRequest.of(page, size));
-        return customers.stream().map(CustomerMapper::toCustomerResponseDto).toList();
+        Page<Customer> customersPage = customerRepository.findAll(PageRequest.of(page, size));
+
+        List<CustomerResponseDto> content = customersPage.getContent().stream()
+                .map(CustomerMapper::toCustomerResponseDto)
+                .toList();
+
+        return new PageResponseDto<>(
+                content,
+                customersPage.getNumber(),
+                customersPage.getSize(),
+                customersPage.getTotalElements(),
+                customersPage.getTotalPages(),
+                customersPage.isFirst(),
+                customersPage.isLast()
+        );
     }
 
 }

@@ -1,16 +1,16 @@
 package com.buccodev.banking_service.controllers;
 
+import com.buccodev.banking_service.dtos.sharedDtos.PageResponseDto;
 import com.buccodev.banking_service.services.CustomerService;
-import com.buccodev.banking_service.utils.dto.customer.CustomerRequestDto;
-import com.buccodev.banking_service.utils.dto.customer.CustomerResponseDto;
-import com.buccodev.banking_service.utils.dto.customer.CustomerUpdateDto;
-import jakarta.websocket.server.PathParam;
+import com.buccodev.banking_service.dtos.customer.CustomerRequestDto;
+import com.buccodev.banking_service.dtos.customer.CustomerResponseDto;
+import com.buccodev.banking_service.dtos.customer.CustomerUpdateDto;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/customers")
@@ -23,7 +23,7 @@ public class CustomerController {
     }
 
     @PostMapping
-    public ResponseEntity<CustomerResponseDto> createCustomer(@RequestBody CustomerRequestDto customerRequestDto) {
+    public ResponseEntity<CustomerResponseDto> createCustomer(@Valid @RequestBody CustomerRequestDto customerRequestDto) {
         var customerDto = customerService.createCustomer(customerRequestDto);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(customerDto.id()).toUri();
@@ -49,15 +49,17 @@ public class CustomerController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updateCustomer(@PathVariable Long id, @RequestBody CustomerUpdateDto customerUpdateDtoDto) {
+    public ResponseEntity<Void> updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerUpdateDto customerUpdateDtoDto) {
         customerService.updateCustomer(id, customerUpdateDtoDto);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
-    public ResponseEntity<List<CustomerResponseDto>> getAllCustomers(@PathParam("page") Integer page, @PathParam("size") Integer size) {
-        var customers = customerService.getAllCustomers(page, size);
-        return ResponseEntity.ok(customers);
+    public ResponseEntity<PageResponseDto<CustomerResponseDto>> getAllCustomers(
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        PageResponseDto<CustomerResponseDto> response = customerService.getAllCustomers(page, size);
+        return ResponseEntity.ok(response);
     }
 
 }

@@ -1,4 +1,4 @@
-package com.buccodev.banking_service.exception;
+package com.buccodev.banking_service.exceptions.card;
 
 public class CardNotFoundException extends RuntimeException {
     public CardNotFoundException(String message) {

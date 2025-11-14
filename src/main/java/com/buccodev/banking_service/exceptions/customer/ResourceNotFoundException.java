@@ -1,4 +1,4 @@
-package com.buccodev.banking_service.exception;
+package com.buccodev.banking_service.exceptions.customer;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {

@@ -23,17 +23,20 @@ public class Card {
     private LocalDate expirationDate;
     @Column(nullable = false)
     private CardType cardType;
+    @Column(length = 8, nullable = false)
+    private String password;
 
     public Card(){
     }
 
-    public Card(Long id, Account account, String cardNumber, String cvv, LocalDate expirationDate) {
+    public Card(Long id, Account account, String cardNumber, String cvv, LocalDate expirationDate, String password) {
         this.id = id;
         this.account = account;
         this.cardNumber = cardNumber;
         this.cvv = cvv;
         this.expirationDate = expirationDate;
         this.cardType = CardType.DEBIT_CARD;
+        this.password = password;
     }
 
 
@@ -83,6 +86,14 @@ public class Card {
 
     public void setCardType(CardType cardType) {
         this.cardType = cardType;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     @Override

@@ -1,15 +1,15 @@
 package com.buccodev.banking_service.controllers;
 
-import com.buccodev.banking_service.entities.PixType;
+import com.buccodev.banking_service.dtos.sharedDtos.PageResponseDto;
 import com.buccodev.banking_service.services.AccountService;
-import com.buccodev.banking_service.utils.dto.account.AccountResponseDto;
-import com.buccodev.banking_service.utils.dto.account.PixPaymentRequestDto;
-import jakarta.websocket.server.PathParam;
+import com.buccodev.banking_service.dtos.account.AccountResponseDto;
+import com.buccodev.banking_service.dtos.account.PixPaymentRequestDto;
+import com.buccodev.banking_service.dtos.account.UpdatePixDto;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @RestController
 @RequestMapping("/accounts")
@@ -21,20 +21,21 @@ public class AccountController {
         this.accountService = accountService;
     }
 
-    @GetMapping
+    @GetMapping("/{id}")
     public ResponseEntity<AccountResponseDto> getAccountById(@PathVariable Long id) {
         var accountDto = accountService.getAccountById(id);
         return ResponseEntity.ok(accountDto);
     }
 
-    @GetMapping("/{accountNumber}")
+    @GetMapping("/num-account/{accountNumber}")
     public ResponseEntity<AccountResponseDto> getAccountByAccountNumber(@PathVariable String accountNumber) {
         var accountDto = accountService.getAccountByAccountNumber(accountNumber);
         return ResponseEntity.ok(accountDto);
     }
 
-    @PostMapping("/pix/{id}/{pixKeyDestination}/{amount}")
+    @PostMapping("/pix/{id}")
     public ResponseEntity<Void> paymentWithPix(@PathVariable Long id,
+                                               @Valid
                                                @RequestBody PixPaymentRequestDto pixPaymentRequestDto
     ) {
         accountService.paymentWithPix(id, pixPaymentRequestDto);
@@ -48,7 +49,8 @@ public class AccountController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<AccountResponseDto>> getAllAccounts(@PathParam("page") Integer page, @PathParam("size") Integer size) {
+    public ResponseEntity<PageResponseDto<AccountResponseDto>> getAllAccounts(@RequestParam(defaultValue = "0") Integer page,
+                                                                              @RequestParam(defaultValue = "10") Integer size) {
         var accountsDto = accountService.getAllAccounts(page, size);
         return ResponseEntity.ok(accountsDto);
     }
@@ -71,9 +73,9 @@ public class AccountController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{id}/update-pix-key/{pixKey}")
-    public ResponseEntity<Void> updatePixKey(@PathVariable Long id, @PathVariable PixType pixKey) {
-        accountService.updatePixKey(id, pixKey);
+    @PutMapping("/update-pix-key/{id}")
+    public ResponseEntity<Void> updatePixKey(@PathVariable Long id, @Valid @RequestBody UpdatePixDto updatePixDto) {
+        accountService.updatePixKey(id, updatePixDto);
         return ResponseEntity.ok().build();
     }
 }

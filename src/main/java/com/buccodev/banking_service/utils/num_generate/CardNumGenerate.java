@@ -45,4 +45,13 @@ public class CardNumGenerate {
         }
         return cvv.toString();
     }
+
+    public static String generatePassword() {
+        var rand = new Random();
+        StringBuilder password = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            password.append(rand.nextInt(10));
+        }
+        return password.toString();
+    }
 }
