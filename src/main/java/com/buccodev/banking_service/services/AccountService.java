@@ -4,6 +4,7 @@ import com.buccodev.banking_service.dtos.sharedDtos.PageResponseDto;
 import com.buccodev.banking_service.entities.Account;
 import com.buccodev.banking_service.entities.CardType;
 import com.buccodev.banking_service.entities.PixType;
+import com.buccodev.banking_service.exceptions.CredentialInvalidException;
 import com.buccodev.banking_service.exceptions.account.AccountNotFoundException;
 import com.buccodev.banking_service.exceptions.account.BalanceNotEnoughException;
 import com.buccodev.banking_service.exceptions.card.CardLimitsException;
@@ -11,10 +12,12 @@ import com.buccodev.banking_service.repositories.AccountRepository;
 import com.buccodev.banking_service.dtos.account.AccountResponseDto;
 import com.buccodev.banking_service.dtos.account.PixPaymentRequestDto;
 import com.buccodev.banking_service.dtos.account.UpdatePixDto;
+import com.buccodev.banking_service.utils.auth.ResourceOwnerChecker;
 import com.buccodev.banking_service.utils.mapper.AccountMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -31,12 +34,19 @@ public class AccountService {
 
     public AccountResponseDto getAccountById(Long id) {
         var account = accountRepository.findById(id).orElseThrow(()-> new AccountNotFoundException("Account not found"));
+        if(ResourceOwnerChecker.verificationById(account.getCustomer().getId(), SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
         return AccountMapper.toAccountResponseDto(account);
     }
 
     public AccountResponseDto getAccountByAccountNumber(String accountNumber) {
         var account = accountRepository.findByAccountNumber(accountNumber)
                 .orElseThrow(()-> new AccountNotFoundException("Account not found"));
+        if(ResourceOwnerChecker.verificationById(account.getCustomer().getId(), SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
+
         return AccountMapper.toAccountResponseDto(account);
     }
 
@@ -45,6 +55,9 @@ public class AccountService {
         var pixKeyDestination = pixPaymentRequestDto.pixKeyDestination();
         var amount = pixPaymentRequestDto.amount();
         var account = accountRepository.findById(id).orElseThrow(()-> new AccountNotFoundException("Account not found"));
+        if(ResourceOwnerChecker.verificationById(account.getCustomer().getId(), SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
         var accountDestination = accountRepository.findByPixKey(pixKeyDestination)
                 .orElseThrow(()-> new AccountNotFoundException("Account not found"));
         if (account.getBalance().compareTo(amount) < 0) {
@@ -58,6 +71,9 @@ public class AccountService {
 
     public void deleteAccount(Long id) {
         var account = accountRepository.findById(id).orElseThrow(()-> new AccountNotFoundException("Account not found"));
+        if(ResourceOwnerChecker.verificationById(account.getCustomer().getId(), SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
         accountRepository.deleteById(account.getId());
     }
 
@@ -107,7 +123,9 @@ public class AccountService {
 
     public void updatePixKey(Long id, UpdatePixDto updatePixDto) {
         var account = accountRepository.findById(id).orElseThrow(()-> new AccountNotFoundException("Account not found"));
-
+        if(ResourceOwnerChecker.verificationById(account.getCustomer().getId(), SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
        var newPix  = switch (updatePixDto.pixType()){
            case  PixType.CPF -> account.getCustomer().getCpf();
            case PixType.EMAIL -> account.getCustomer().getEmail();

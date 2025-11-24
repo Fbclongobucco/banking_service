@@ -1,11 +1,16 @@
 package com.buccodev.banking_service.entities;
 
 import jakarta.persistence.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
-public class Customer {
+public class Customer implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,6 +27,9 @@ public class Customer {
     private String phone;
     @OneToOne(mappedBy = "customer", optional = false, cascade = CascadeType.ALL)
     private Account account;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Roles role;
 
     public Customer() {
     }
@@ -34,6 +42,7 @@ public class Customer {
         this.password = password;
         this.phone = phone;
         this.account = account;
+        this.role = Roles.CUSTOMER;
     }
 
     public Long getId() {
@@ -68,10 +77,6 @@ public class Customer {
         this.cpf = cpf;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public void setPassword(String password) {
         this.password = password;
     }
@@ -90,6 +95,32 @@ public class Customer {
 
     public void setAccount(Account account) {
         this.account = account;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public Roles getRole() {
+        return role;
+    }
+
+    public void setRole(Roles role) {
+        this.role = role;
+    }
+
+    @Override
+    public String getUsername() {
+        return this.email;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if(this.role == Roles.ADMIN ){
+            return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"),
+                    new SimpleGrantedAuthority("ROLE_CUSTOMER"));
+        }
+        return List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
     }
 
     @Override

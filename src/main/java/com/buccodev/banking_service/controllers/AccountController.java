@@ -7,6 +7,7 @@ import com.buccodev.banking_service.dtos.account.PixPaymentRequestDto;
 import com.buccodev.banking_service.dtos.account.UpdatePixDto;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -48,6 +49,7 @@ public class AccountController {
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all")
     public ResponseEntity<PageResponseDto<AccountResponseDto>> getAllAccounts(@RequestParam(defaultValue = "0") Integer page,
                                                                               @RequestParam(defaultValue = "10") Integer size) {
@@ -55,18 +57,21 @@ public class AccountController {
         return ResponseEntity.ok(accountsDto);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/add-balance/{amount}")
     public ResponseEntity<Void> addBalance(@PathVariable Long id, @PathVariable BigDecimal amount) {
         accountService.addBalance(id, amount);
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/remove-balance/{amount}")
     public ResponseEntity<Void> removeBalance(@PathVariable Long id, @PathVariable BigDecimal amount) {
         accountService.removeBalance(id, amount);
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/update-credit-limit/{creditLimit}")
     public ResponseEntity<Void> updateCreditLimit(@PathVariable Long id, @PathVariable BigDecimal creditLimit) {
         accountService.updateCreditLimit(id, creditLimit);

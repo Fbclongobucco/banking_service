@@ -7,6 +7,7 @@ import com.buccodev.banking_service.dtos.customer.CustomerResponseDto;
 import com.buccodev.banking_service.dtos.customer.CustomerUpdateDto;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -49,11 +50,12 @@ public class CustomerController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerUpdateDto customerUpdateDtoDto) {
+    public ResponseEntity<Void> updateCustomer(@PathVariable Long id,  @Valid @RequestBody CustomerUpdateDto customerUpdateDtoDto) {
         customerService.updateCustomer(id, customerUpdateDtoDto);
         return ResponseEntity.ok().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<PageResponseDto<CustomerResponseDto>> getAllCustomers(
             @RequestParam(defaultValue = "0") Integer page,

@@ -2,6 +2,7 @@ package com.buccodev.banking_service.services;
 
 import com.buccodev.banking_service.entities.Card;
 import com.buccodev.banking_service.entities.CardType;
+import com.buccodev.banking_service.exceptions.CredentialInvalidException;
 import com.buccodev.banking_service.exceptions.account.AccountNotFoundException;
 import com.buccodev.banking_service.exceptions.card.CardLimitsException;
 import com.buccodev.banking_service.exceptions.card.CardNotFoundException;
@@ -12,9 +13,11 @@ import com.buccodev.banking_service.dtos.card.CardResponseDto;
 import com.buccodev.banking_service.dtos.card.CreditCardRequestDto;
 import com.buccodev.banking_service.dtos.card.CreditCardResponseDto;
 import com.buccodev.banking_service.dtos.card.DebitCardRequestDto;
+import com.buccodev.banking_service.utils.auth.ResourceOwnerChecker;
 import com.buccodev.banking_service.utils.mapper.CardMapper;
 import com.buccodev.banking_service.utils.num_generate.CardNumGenerate;
 import jakarta.transaction.Transactional;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -100,6 +103,9 @@ public class CardService {
 
     public CardResponseDto getCardById(Long id) {
         var card = cardRepository.findById(id).orElseThrow(() -> new CardNotFoundException("Card not found"));
+        if(ResourceOwnerChecker.verificationById(card.getAccount().getCustomer().getId(), SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
         return CardMapper.toCardResponseDto(card);
     }
 
@@ -107,6 +113,9 @@ public class CardService {
         var cardOld = cardRepository.findById(id).orElseThrow(() -> new CardNotFoundException("Card not found"));
         var account = accountRepository.findById(cardOld.getAccount().getId())
                 .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+        if(ResourceOwnerChecker.verificationById(cardOld.getAccount().getCustomer().getId(), SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
 
         cardRepository.delete(cardOld);
 

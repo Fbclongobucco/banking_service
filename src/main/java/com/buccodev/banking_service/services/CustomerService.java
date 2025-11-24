@@ -4,6 +4,8 @@ import com.buccodev.banking_service.dtos.sharedDtos.PageResponseDto;
 import com.buccodev.banking_service.entities.Account;
 import com.buccodev.banking_service.entities.Card;
 import com.buccodev.banking_service.entities.Customer;
+import com.buccodev.banking_service.entities.Roles;
+import com.buccodev.banking_service.exceptions.CredentialInvalidException;
 import com.buccodev.banking_service.exceptions.account.AccountAlreadyException;
 import com.buccodev.banking_service.exceptions.card.CardAlreadyException;
 import com.buccodev.banking_service.exceptions.customer.CustomerAlreadyRegisteredException;
@@ -14,12 +16,15 @@ import com.buccodev.banking_service.repositories.CustomerRepository;
 import com.buccodev.banking_service.dtos.customer.CustomerRequestDto;
 import com.buccodev.banking_service.dtos.customer.CustomerResponseDto;
 import com.buccodev.banking_service.dtos.customer.CustomerUpdateDto;
+import com.buccodev.banking_service.utils.auth.ResourceOwnerChecker;
 import com.buccodev.banking_service.utils.mapper.CustomerMapper;
 import com.buccodev.banking_service.utils.num_generate.AccountNumGenerator;
 import com.buccodev.banking_service.utils.num_generate.CardNumGenerate;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -32,11 +37,13 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final AccountRepository accountRepository;
     private final CardRepository cardRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public CustomerService(CustomerRepository customerRepository, AccountRepository accountRepository, CardRepository cardRepository) {
+    public CustomerService(CustomerRepository customerRepository, AccountRepository accountRepository, CardRepository cardRepository, PasswordEncoder passwordEncoder) {
         this.customerRepository = customerRepository;
         this.accountRepository = accountRepository;
         this.cardRepository = cardRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
@@ -70,9 +77,10 @@ public class CustomerService {
 
         var account  = new Account(null, null, numAccount, card);
 
+        var passwordEncoded = passwordEncoder.encode(customerRequestDto.password());
 
         var customer = new Customer(null, customerRequestDto.name(), customerRequestDto.email(), customerRequestDto.cpf(),
-                customerRequestDto.password(), customerRequestDto.phone(), account);
+                passwordEncoded, customerRequestDto.phone(), account);
 
         account.setCustomer(customer);
         card.setAccount(account);
@@ -86,25 +94,42 @@ public class CustomerService {
 
     public CustomerResponseDto getCustomerById(Long id) {
         var customer = customerRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Resource not found"));
+        if(ResourceOwnerChecker.verificationById(customer.getId(), SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
         return CustomerMapper.toCustomerResponseDto(customer);
     }
 
     public void updateCustomer(Long id, CustomerUpdateDto customerUpdateDto) {
         var customer = customerRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Resource not found"));
+        if(ResourceOwnerChecker.verificationById(customer.getId(), SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
         customer.setName(customerUpdateDto.name());
-        customer.setCpf(customerUpdateDto.cpf());
         customer.setPhone(customerUpdateDto.phone());
         customerRepository.save(customer);
     }
 
     public void deleteCustomer(Long id) {
         var customer = customerRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Resource not found"));
+        if(ResourceOwnerChecker.verificationById(customer.getId(), SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
         customerRepository.deleteById(customer.getId());
     }
 
     public CustomerResponseDto getCustomerByEmail(String email) {
         var customer = customerRepository.findByEmail(email).orElseThrow(()-> new ResourceNotFoundException("Resource not found"));
+        if(ResourceOwnerChecker.verificationById(customer.getId(), SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
         return CustomerMapper.toCustomerResponseDto(customer);
+    }
+
+    public void updateRole(Long id, Roles role){
+        var customer = customerRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Resource not found"));
+        customer.setRole(role);
+        customerRepository.save(customer);
     }
 
     public PageResponseDto<CustomerResponseDto> getAllCustomers(Integer page, Integer size) {

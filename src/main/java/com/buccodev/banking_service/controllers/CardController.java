@@ -8,6 +8,7 @@ import com.buccodev.banking_service.dtos.card.CreditCardResponseDto;
 import com.buccodev.banking_service.dtos.card.DebitCardRequestDto;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -40,6 +41,7 @@ public class CardController {
         return ResponseEntity.ok(cardService.getCardById(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/update/type/{id}")
     public ResponseEntity<Void> updateCardType(@PathVariable Long id, @Valid @RequestBody CardTypeDto cardTypeDto){
         cardService.updateCardType(id, cardTypeDto);

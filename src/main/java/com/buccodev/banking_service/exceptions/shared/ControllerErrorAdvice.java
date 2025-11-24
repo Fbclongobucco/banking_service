@@ -1,6 +1,9 @@
 package com.buccodev.banking_service.exceptions.shared;
 
+import com.buccodev.banking_service.exceptions.CredentialInvalidException;
 import com.buccodev.banking_service.exceptions.account.AccountAlreadyException;
+import com.buccodev.banking_service.exceptions.auth.InvalidTokenException;
+import com.buccodev.banking_service.exceptions.auth.JWTException;
 import com.buccodev.banking_service.exceptions.card.CardAlreadyException;
 import com.buccodev.banking_service.exceptions.card.CardLimitsException;
 import com.buccodev.banking_service.exceptions.card.CardNotFoundException;
@@ -11,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -140,6 +144,38 @@ public class ControllerErrorAdvice {
                 List.of(Map.of("message", ex.getMessage()))
         );
         return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(CredentialInvalidException.class)
+    public ResponseEntity<StandardError> handleCredentialInvalidException(CredentialInvalidException ex, HttpServletRequest request) {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        StandardError error = new StandardError(timestamp, HttpStatus.UNAUTHORIZED.value(),
+                request.getRequestURI(), List.of(Map.of("message", ex.getMessage())));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<StandardError> handleInvalidTokenException(InvalidTokenException ex, HttpServletRequest request) {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        StandardError error = new StandardError(timestamp, HttpStatus.UNAUTHORIZED.value(),
+                request.getRequestURI(), List.of(Map.of("message", ex.getMessage())));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(JWTException.class)
+    public ResponseEntity<StandardError> handleJWTException(JWTException ex, HttpServletRequest request) {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        StandardError error = new StandardError(timestamp, HttpStatus.UNAUTHORIZED.value(),
+                request.getRequestURI(), List.of(Map.of("message", ex.getMessage())));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<StandardError> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        StandardError error = new StandardError(timestamp, HttpStatus.FORBIDDEN.value(),
+                request.getRequestURI(), List.of(Map.of("message", ex.getMessage())));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     @ExceptionHandler(Exception.class)
