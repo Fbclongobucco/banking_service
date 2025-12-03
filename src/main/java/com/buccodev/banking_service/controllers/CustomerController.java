@@ -1,6 +1,7 @@
 package com.buccodev.banking_service.controllers;
 
 import com.buccodev.banking_service.dtos.sharedDtos.PageResponseDto;
+import com.buccodev.banking_service.entities.Roles;
 import com.buccodev.banking_service.services.CustomerService;
 import com.buccodev.banking_service.dtos.customer.CustomerRequestDto;
 import com.buccodev.banking_service.dtos.customer.CustomerResponseDto;
@@ -47,6 +48,13 @@ public class CustomerController {
     public ResponseEntity<CustomerResponseDto> getCustomerByEmail(@PathVariable String email) {
         var customerDto = customerService.getCustomerByEmail(email);
         return ResponseEntity.ok(customerDto);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/role/{role}")
+    public ResponseEntity<Void> updateRole(@PathVariable Long id, @PathVariable Roles role) {
+        customerService.updateRole(id, role);
+        return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{id}")

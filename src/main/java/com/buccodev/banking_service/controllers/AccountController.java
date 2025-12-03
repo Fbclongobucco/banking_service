@@ -1,10 +1,8 @@
 package com.buccodev.banking_service.controllers;
 
+import com.buccodev.banking_service.dtos.account.*;
 import com.buccodev.banking_service.dtos.sharedDtos.PageResponseDto;
 import com.buccodev.banking_service.services.AccountService;
-import com.buccodev.banking_service.dtos.account.AccountResponseDto;
-import com.buccodev.banking_service.dtos.account.PixPaymentRequestDto;
-import com.buccodev.banking_service.dtos.account.UpdatePixDto;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -57,6 +55,14 @@ public class AccountController {
         return ResponseEntity.ok(accountsDto);
     }
 
+    @PostMapping("/transfer/{id}")
+    public ResponseEntity<Void> transfer(@PathVariable Long id,
+                                          @Valid
+                                          @RequestBody TransferByAccountNumberRequestDto transferRequestDto) {
+        accountService.transferByAccountNumber(id, transferRequestDto);
+        return ResponseEntity.ok().build();
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/add-balance/{amount}")
     public ResponseEntity<Void> addBalance(@PathVariable Long id, @PathVariable BigDecimal amount) {
@@ -78,9 +84,16 @@ public class AccountController {
         return ResponseEntity.ok().build();
     }
 
+
     @PutMapping("/update-pix-key/{id}")
     public ResponseEntity<Void> updatePixKey(@PathVariable Long id, @Valid @RequestBody UpdatePixDto updatePixDto) {
         accountService.updatePixKey(id, updatePixDto);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/get-by-pix-key/{pixKey}")
+    public ResponseEntity<AccountResponseDto> findByPixKey(@PathVariable String pixKey) {
+        var accountDto = accountService.findByPixKey(pixKey);
+        return ResponseEntity.ok(accountDto);
     }
 }

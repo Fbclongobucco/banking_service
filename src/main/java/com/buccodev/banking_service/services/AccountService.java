@@ -1,17 +1,16 @@
 package com.buccodev.banking_service.services;
 
+import com.buccodev.banking_service.dtos.account.*;
 import com.buccodev.banking_service.dtos.sharedDtos.PageResponseDto;
 import com.buccodev.banking_service.entities.Account;
 import com.buccodev.banking_service.entities.CardType;
 import com.buccodev.banking_service.entities.PixType;
 import com.buccodev.banking_service.exceptions.CredentialInvalidException;
+import com.buccodev.banking_service.exceptions.account.AccountConflictException;
 import com.buccodev.banking_service.exceptions.account.AccountNotFoundException;
 import com.buccodev.banking_service.exceptions.account.BalanceNotEnoughException;
 import com.buccodev.banking_service.exceptions.card.CardLimitsException;
 import com.buccodev.banking_service.repositories.AccountRepository;
-import com.buccodev.banking_service.dtos.account.AccountResponseDto;
-import com.buccodev.banking_service.dtos.account.PixPaymentRequestDto;
-import com.buccodev.banking_service.dtos.account.UpdatePixDto;
 import com.buccodev.banking_service.utils.auth.ResourceOwnerChecker;
 import com.buccodev.banking_service.utils.mapper.AccountMapper;
 import jakarta.transaction.Transactional;
@@ -97,6 +96,25 @@ public class AccountService {
        );
     }
 
+    public void transferByAccountNumber(Long id, TransferByAccountNumberRequestDto transferByAccountNumberRequestDto) {
+        var account = accountRepository.findById(id).orElseThrow(()-> new AccountNotFoundException("Account not found"));
+        var accountDestination = accountRepository.findByAccountNumber(transferByAccountNumberRequestDto.accountNumber()).orElseThrow(()-> new AccountNotFoundException("Account not found"));
+        if(ResourceOwnerChecker.verificationById(account.getCustomer().getId(), SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
+        if (account.getBalance().compareTo(transferByAccountNumberRequestDto.amount()) < 0) {
+            throw new BalanceNotEnoughException("Balance not enough");
+        }
+
+        if(account.getAccountNumber().equals(accountDestination.getAccountNumber())){
+            throw new AccountConflictException("Account conflict");
+        }
+        account.setBalance(account.getBalance().subtract(transferByAccountNumberRequestDto.amount()));
+        accountDestination.setBalance(accountDestination.getBalance().add(transferByAccountNumberRequestDto.amount()));
+        accountRepository.save(account);
+        accountRepository.save(accountDestination);
+    }
+
     public void addBalance(Long id, BigDecimal amount) {
         var account = accountRepository.findById(id).orElseThrow(()-> new AccountNotFoundException("Account not found"));
         account.setBalance(account.getBalance().add(amount));
@@ -134,8 +152,13 @@ public class AccountService {
 
        };
        account.setPixKey(newPix);
-
         accountRepository.save(account);
+    }
+
+    public AccountResponseDto findByPixKey(String pixKey){
+        var account = accountRepository.findByPixKey(pixKey)
+                .orElseThrow(()-> new AccountNotFoundException("Account not found"));
+        return AccountMapper.toAccountResponseDto(account);
     }
 
 }

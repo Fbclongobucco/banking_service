@@ -128,6 +128,9 @@ public class CustomerService {
 
     public void updateRole(Long id, Roles role){
         var customer = customerRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Resource not found"));
+        if(ResourceOwnerChecker.verificationById(id, SecurityContextHolder.getContext().getAuthentication())){
+            throw new CredentialInvalidException("Invalid credentials");
+        }
         customer.setRole(role);
         customerRepository.save(customer);
     }
