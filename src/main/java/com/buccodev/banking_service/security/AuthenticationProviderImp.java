@@ -32,9 +32,6 @@ public class AuthenticationProviderImp implements AuthenticationProvider {
             throw new CredentialInvalidException("Invalid credentials");
         }
 
-
-
-
         var authenticated = new UsernamePasswordAuthenticationToken(user ,null, user.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authenticated);
 
