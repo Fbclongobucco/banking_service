@@ -3,7 +3,6 @@ package com.buccodev.banking_service.security;
 import com.buccodev.banking_service.dtos.auth.LoginRequestDto;
 import com.buccodev.banking_service.dtos.auth.LoginResponseDto;
 import com.buccodev.banking_service.dtos.auth.RefreshTokenRequestDto;
-import com.buccodev.banking_service.dtos.auth.UserLoggedDto;
 import com.buccodev.banking_service.entities.Customer;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -32,10 +31,10 @@ public class AuthenticationService {
         var refreshToken = tokenService.generateRefreshToken(user);
         var userAuthenticated = findUserForAuthentication.findUserForAuthentication(loginRequestDto.email());
 
-        var userLogged = (Customer) userAuthenticated;
+        var customer = (Customer) userAuthenticated;
 
         return new LoginResponseDto(
-                new UserLoggedDto(userLogged.getId(), userLogged.getName(), userLogged.getEmail(), userLogged.getRole().toString()),
+                customer.getId(),
                 token,
                 refreshToken
         );
@@ -47,10 +46,10 @@ public class AuthenticationService {
         var token = tokenService.generateToken(userAuthenticated);
         var newRefreshToken = tokenService.generateRefreshToken(userAuthenticated);
 
-        var userLogged = (Customer) userAuthenticated;
+        var customer = (Customer) userAuthenticated;
 
         return new LoginResponseDto(
-                new UserLoggedDto(userLogged.getId(), userLogged.getName(), userLogged.getEmail(), userLogged.getRole().toString()),
+                customer.getId(),
                 token,
                 newRefreshToken
         );

@@ -1,4 +1,4 @@
 package com.buccodev.banking_service.dtos.auth;
 
-public record LoginResponseDto(UserLoggedDto userLogged, String token, String refreshToken) {
+public record LoginResponseDto(Long id, String token, String refreshToken) {
 }
